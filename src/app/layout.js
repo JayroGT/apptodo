@@ -1,4 +1,5 @@
 import { Header } from "./components/Header";
+import { Context } from "./context/store";
 import "./globals.css";
 
 
@@ -10,10 +11,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" >
-      <body className="h-screen flex flex-col">
+      <body>
         <Header />
-        <main className="flex-grow flex flex-col overflow-auto">
-          {children}
+        <main className="h-screen flex-col">
+          <Context>
+            {children}
+          </Context>
         </main>
       </body>
 

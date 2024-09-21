@@ -1,45 +1,135 @@
 "use client";
-import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation';
+import { useContext, useState } from 'react';
+import { Global_Context } from '../context/store';
+import { Modal } from './Modal';
 
-export const Tasks = ({onOpen}) => {
-    const [selected, setSelected] = useState(false)
-    const check = () => {
-        setSelected((state) => !state); 
-      };
-    
+export const Tasks = () => {
+
+    const { todos, deleteId, deleteAll, updateTask } = useContext(Global_Context);
+    const router = useRouter();
+
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [modalData, setModalData] = useState({
+        title: '',
+        description: '',
+        btn: '',
+        action: null,
+    })
+
+    const openModal = (title, description, btn, action) => {
+        setIsOpen(true);
+        setModalData({ title, description, btn, action });
+    };
+    const closeModal = () => {
+        setIsOpen(false);
+        setModalData({
+            title: '',
+            description: '',
+            btn: '',
+            action: null
+        });
+    };
+
+    const confirm = () => {
+        if (modalData.action) modalData.action();
+        closeModal();
+    };
+    const check = (id) => {
+        // console.log("loading");
+        const todo = todos.find(task => task.id === id);
+        updateTask({
+            id: todo.id,
+            completed: !todo.completed,
+        });
+    };
+
+    const handleEdit = (id) => {
+        router.push(`/todos/${id}`)
+    }
+
+    const selectedCount = todos.filter(todo => todo.completed).length;
+
 
     return (
-        <div className="w-[600px] mx-auto py-2 rounded-lg my-3 overflow-hidden pt-4">
-            <div className="h-[300px] px-4 border-b pb-20 overflow-y-scroll scrollbar-hide">
-                <div className="flex gap-2 justify-between border-gray-200 rounded-md mb-8">
-                    <button onClick={check} className="w-[32px] h-[32px] border-[1px] border-slate-400 rounded-full">
-                        {
-                            selected ?
-                        <img src="https://res.cloudinary.com/dmdriq0vl/image/upload/v1726741117/checkIcon_xwjgaq.svg" alt="" />
-                        :
-                        null
-                        }
-                    </button>
-                    <div className='flex flex-col gap-3 justify-center w-[400px]' >
-                        <h1 className="text-blue-950 text-[16px] font-[500]">Build a Responsive Landing Page</h1>
-                        <p className="text-[13px] font-[400]">Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney Cosd</p>
-                    </div>
-                    <div className='flex justify-end gap-4 items-center' >
-                        <button className="w-[31px] h-[31px] bg-red-200 rounded-full border-[1px] border-slate-400 flex items-center justify-center">
-                            <img src="https://res.cloudinary.com/dmdriq0vl/image/upload/v1726739653/editIcon_avy1l5.svg" alt="Edit" />
-                        </button>
-                        <button onClick={onOpen} className="w-[31px] h-[31px] bg-red-200 rounded-full border-slate-400 border-[1px] flex items-center justify-center">
-                            <img src="https://res.cloudinary.com/dmdriq0vl/image/upload/v1726740406/deleteIcon_pqwdev.svg" alt="Delete" />
-                        </button>
-
-
-                    </div>
-                </div>
+        <div className="max-w-[600px] mx-auto py-2 rounded-lg my-3 overflow-hidden pt-4">
+            <div className="flex flex-col gap-9 h-[300px] px-4 border-b pb-20 overflow-y-scroll scrollbar-hide">
+                {
+                    todos.map(todo => (
+                        <div key={todo.id} className="flex flex sm:flex-row gap-4 justify-between rounded-md">
+                            <button onClick={() => check(todo.id)} className="w-8 h-8 border border-slate-400 rounded-full">
+                                {
+                                    todo.completed ?
+                                        <img src="https://res.cloudinary.com/dmdriq0vl/image/upload/v1726741117/checkIcon_xwjgaq.svg" alt="" />
+                                        : null
+                                }
+                            </button>
+                            <div className={`flex flex-col justify-center flex-1 ${todo.completed && `opacity-35 line-through`}`} >
+                                {
+                                    todo.title ?
+                                        <h1 className="break-words text-wrap text-blue-950 text-[16px] font-[500]">{todo.title}</h1>
+                                        : null
+                                }
+                                {
+                                    todo.description ?
+                                        <p className="text-wrap break-words text-[13px] font-[400]">{todo.description}</p>
+                                        : null
+                                }
+                            </div>
+                            <div className='flex justify-end gap-4 items-center' >
+                                {
+                                    !todo.completed ?
+                                        <>
+                                            <button
+                                                onClick={() => handleEdit(todo.id)}
+                                                className="w-8 h-8 bg-red-200 rounded-full border border-slate-400 flex items-center justify-center">
+                                                <img src="https://res.cloudinary.com/dmdriq0vl/image/upload/v1726739653/editIcon_avy1l5.svg" alt="Edit" />
+                                            </button>
+                                            <button
+                                                onClick={() => openModal(
+                                                    'Delete Task',
+                                                    'Are you sure you want to delete this task? This action cannot be undone.',
+                                                    'Delete',
+                                                    () => deleteId(todo.id))
+                                                }
+                                                className="w-8 h-8 bg-red-200 rounded-full border-slate-400 border flex items-center justify-center">
+                                                <img src="https://res.cloudinary.com/dmdriq0vl/image/upload/v1726740406/deleteIcon_pqwdev.svg" alt="Delete" />
+                                            </button>
+                                        </>
+                                        : null
+                                }
+                            </div>
+                        </div>
+                    ))
+                }
             </div>
-            <div className='flex justify-between px-5'>
-                <span>3 item selected</span>
-                <button>Clear All</button>
+            <div className='opacity-50 flex justify-between px-5'>
+                <span>{selectedCount} item{selectedCount !== 1 ? 's' : ''} selected</span>
+                <button onClick={() => openModal(
+                    'Clear All Task',
+                    'Are you sure you want to clear all tasks? This action cannot be undone.',
+                    'Clear',
+                    () => deleteAll()
+                )}> Clear All</button>
             </div>
+            {/* MODAL */}
+            {
+                isOpen && (
+                    <div className='absolute inset-0 flex items-center justify-center z-50'>
+                        <Modal
+                            isOpen={isOpen}
+                            title={modalData.title}
+                            description={modalData.description}
+                            btn={modalData.btn}
+                            onClose={closeModal}
+                            onConfirm={confirm}
+                        />
+                    </div>
+                )
+            }
         </div>
+
     );
 };
