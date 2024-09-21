@@ -16,7 +16,10 @@ const EditTaskPage = ({ params }) => {
 
     useEffect(() => {
         if (params.id) {
-            const taskToEdit = todos.find(todo => todo.id === parseInt(params.id, 10));
+            const taskToEdit = todos.find(todo => {
+                return todo.id === parseInt(params.id, 10) || todo.id === params.id;
+            });
+
             if (taskToEdit) {
                 setTask(taskToEdit);
                 setTitle(taskToEdit.title);
@@ -28,6 +31,7 @@ const EditTaskPage = ({ params }) => {
         }
         // setLoading(false);
     }, [params.id, todos, router]);
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
